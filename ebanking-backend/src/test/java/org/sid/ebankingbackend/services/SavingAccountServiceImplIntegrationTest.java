@@ -3,8 +3,8 @@ package org.sid.ebankingbackend.services;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.sid.ebankingbackend.config.InfrastructureTestConfig;
-import org.sid.ebankingbackend.entities.BankAccount;
-import org.sid.ebankingbackend.entities.CurrentAccount;
+import org.sid.ebankingbackend.dtos.BankAccountDto;
+import org.sid.ebankingbackend.dtos.SavingAccountDto;
 import org.sid.ebankingbackend.entities.Customer;
 import org.sid.ebankingbackend.entities.SavingAccount;
 import org.sid.ebankingbackend.execptions.BankAccountNotFoundException;
@@ -30,11 +30,13 @@ public class SavingAccountServiceImplIntegrationTest {
     private SavingAccountService savingAccountService;
 
     @Autowired
+    private BankAccountService bankAccountService;
+
+    @Autowired
     private CustomerRepository customerRepository;
 
     @Autowired
     private SavingAccountRepository savingAccountRepository;
-
 
     private Customer customer;
 
@@ -83,12 +85,12 @@ public class SavingAccountServiceImplIntegrationTest {
 
 
         // WHEN
-        final BankAccount retrievedSavingAccount = savingAccountService.getBankAccount(savingAccount.getId());
+        final BankAccountDto retrievedSavingAccountDto = bankAccountService.getBankAccount(savingAccount.getId());
 
         //THEN
-        Assertions.assertTrue(retrievedSavingAccount instanceof SavingAccount);
-        Assertions.assertEquals(savingAccount.getId(), retrievedSavingAccount.getId());
-        Assertions.assertEquals(90000, retrievedSavingAccount.getBalance());
+        Assertions.assertTrue(retrievedSavingAccountDto instanceof SavingAccountDto);
+        Assertions.assertEquals(savingAccount.getId(), retrievedSavingAccountDto.getId());
+        Assertions.assertEquals(90000, retrievedSavingAccountDto.getBalance());
     }
 
     @Test
@@ -99,7 +101,7 @@ public class SavingAccountServiceImplIntegrationTest {
 
         // WHEN
         Exception exception = Assertions.assertThrows(BankAccountNotFoundException.class,() -> {
-            savingAccountService.getBankAccount(savingAccount.getId()+ "unknown");
+            bankAccountService.getBankAccount(savingAccount.getId()+ "unknown");
         });
 
         //THEN
@@ -115,9 +117,9 @@ public class SavingAccountServiceImplIntegrationTest {
         savingAccountService.saveSavingAccount(7000, secondCustomer.getId(), 500);
 
         // WHEN
-        final List<BankAccount> savingAccounts = savingAccountService.getListBankAccount();
+        final List<BankAccountDto> savingAccountDtos = bankAccountService.getListBankAccount();
 
         //THEN
-        Assertions.assertEquals(2,savingAccounts.size());
+        Assertions.assertEquals(2, savingAccountDtos.size());
     }
 }

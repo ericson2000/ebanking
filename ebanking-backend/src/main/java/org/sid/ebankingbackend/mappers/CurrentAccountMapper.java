@@ -5,6 +5,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
+import org.sid.ebankingbackend.dtos.CurrentAccountDto;
 import org.sid.ebankingbackend.dtos.SavingAccountDto;
 import org.sid.ebankingbackend.entities.CurrentAccount;
 import org.sid.ebankingbackend.entities.SavingAccount;
@@ -12,9 +13,9 @@ import org.sid.ebankingbackend.entities.SavingAccount;
 import java.util.Objects;
 
 @Mapper
-public interface SavingAccountMapper {
+public interface CurrentAccountMapper {
 
-    SavingAccountMapper INSTANCE = Mappers.getMapper(SavingAccountMapper.class);
+    CurrentAccountMapper INSTANCE = Mappers.getMapper(CurrentAccountMapper.class);
 
 
     @BeanMapping(ignoreByDefault = true)
@@ -23,8 +24,8 @@ public interface SavingAccountMapper {
     @Mapping(source = "createdAt", target = "createdAt")
     @Mapping(source = "status", target = "status")
     @Mapping(source = "customerDto", target = "customer")
-    @Mapping(source = "interestRate", target = "interestRate")
-    SavingAccount savingAccountDtoToSavingAccount(SavingAccountDto savingAccountDto);
+    @Mapping(source = "overDraft", target = "overDraft")
+    CurrentAccount currentAccountDtoToCurrentAccount(CurrentAccountDto currentAccountDto);
 
 
     @BeanMapping(ignoreByDefault = true)
@@ -33,12 +34,13 @@ public interface SavingAccountMapper {
     @Mapping(source = "createdAt", target = "createdAt")
     @Mapping(source = "status", target = "status")
     @Mapping(source = "customer", target = "customerDto")
-    @Mapping(source = "interestRate", target = "interestRate")
-    @Mapping(source = "savingAccount", target = "type",qualifiedByName = "toType")
-    SavingAccountDto savingAccountToSavingAccountDto(SavingAccount savingAccount);
+    @Mapping(source = "overDraft", target = "overDraft")
+    @Mapping(source = "currentAccount", target = "type",qualifiedByName = "toType")
+
+    CurrentAccountDto currentAccountToCurrentAccountDto(CurrentAccount currentAccount);
 
     @Named("toType")
-    static String toType(SavingAccount savingAccount){
-        return Objects.nonNull(savingAccount)?savingAccount.getClass().getSimpleName():null;
+    static String toType(CurrentAccount currentAccount){
+        return Objects.nonNull(currentAccount)?currentAccount.getClass().getSimpleName():null;
     }
 }

@@ -8,6 +8,7 @@ import org.sid.ebankingbackend.execptions.CustomerNotFoundException;
 import org.sid.ebankingbackend.mappers.CustomerMapper;
 import org.sid.ebankingbackend.services.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,31 +25,28 @@ public class CustomerRestController {
     }
 
     @GetMapping(value = "/customers")
-    public List<CustomerDto> customers() {
+    public ResponseEntity<List<CustomerDto>> customers() {
 
-        return customerService.listCustomer();
-
+        return ResponseEntity.ok(customerService.listCustomer());
     }
 
     @GetMapping("/customers/{id}")
-    public CustomerDto getCustomer(@PathVariable(name = "id") Long customerId) throws CustomerNotFoundException {
+    public ResponseEntity<CustomerDto> getCustomer(@PathVariable(name = "id") Long customerId) throws CustomerNotFoundException {
 
-        return customerService.getCustomer(customerId);
+        return ResponseEntity.ok(customerService.getCustomer(customerId));
     }
 
     @PostMapping(value = "/customers",consumes = "application/json",produces = "application/json")
-    public CustomerDto saveCustomer(@RequestBody CustomerDto customerDto) {
+    public ResponseEntity<CustomerDto> saveCustomer(@RequestBody CustomerDto customerDto) {
 
-        return customerService.saveCustomer(customerDto);
-
+        return ResponseEntity.ok(customerService.saveCustomer(customerDto));
     }
 
     @PutMapping(value = "/customers/{id}",consumes = "application/json",produces = "application/json")
-    public CustomerDto saveCustomer(@PathVariable(name = "id") Long customerId, @RequestBody CustomerDto customerDto) {
+    public ResponseEntity<CustomerDto> saveCustomer(@PathVariable(name = "id") Long customerId, @RequestBody CustomerDto customerDto) {
 
         customerDto.setId(customerId);
-        return customerService.updateCustomer(customerDto);
-
+        return ResponseEntity.ok(customerService.updateCustomer(customerDto));
     }
 
     @DeleteMapping("/customers/{id}")

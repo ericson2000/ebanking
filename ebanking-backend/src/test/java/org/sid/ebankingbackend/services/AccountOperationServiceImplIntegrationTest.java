@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.sid.ebankingbackend.config.InfrastructureTestConfig;
+import org.sid.ebankingbackend.dtos.BankAccountDto;
 import org.sid.ebankingbackend.entities.BankAccount;
 import org.sid.ebankingbackend.entities.CurrentAccount;
 import org.sid.ebankingbackend.entities.Customer;
@@ -19,6 +20,7 @@ import org.sid.ebankingbackend.repositories.AccountOperationRepository;
 import org.sid.ebankingbackend.repositories.BankAccountRepository;
 import org.sid.ebankingbackend.repositories.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
@@ -31,19 +33,16 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 public class AccountOperationServiceImplIntegrationTest {
 
     @Autowired
-    private AccountOperationService accountOperationService;
+    private AccountOperationService<BankAccount> accountOperationService;
 
     @Autowired
-    private AccountOperationRepository accountOperationRepository;
+    private AccountOperationRepository<BankAccount> accountOperationRepository;
 
     @Autowired
-    private  CurrentAccountService currentAccountService;
-
-    @Autowired(required = false)
-    private  SavingAccountService savingAccountService;
+    private  BankAccountService bankAccountService;
 
     @Autowired
-    private CustomerRepository customerRepository;
+    private CustomerRepository customerRepository ;
 
     private Customer customer;
 
@@ -64,28 +63,28 @@ public class AccountOperationServiceImplIntegrationTest {
     void given_currentAccount_with_balance_when_debit_with_x_amount_then_the_balance_reducing_to_x() throws CustomerNotFoundException, BankAccountNotFoundException, BalanceNotSufficientException {
 
         //GIVEN
-        CurrentAccount currentAccount = currentAccountService.saveCurrentAccount(90000, persistedCustomer.getId(), 20000);
+        CurrentAccount currentAccount = bankAccountService.saveCurrentAccount(90000, persistedCustomer.getId(), 20000);
 
         //WHEN
         accountOperationService.debit(currentAccount.getId(), 60000,"achat produit intermart");
 
         //THEN
-        final BankAccount retrievedCurrentAccount = currentAccountService.getBankAccount(currentAccount.getId());
-        Assertions.assertEquals(30000,retrievedCurrentAccount.getBalance());
+        final BankAccountDto retrievedCurrentAccountDto = bankAccountService.getBankAccount(currentAccount.getId());
+        Assertions.assertEquals(30000, retrievedCurrentAccountDto.getBalance());
     }
 
     @Test
     void given_currentAccount_with_balance_when_credit_with_x_amount_then_the_balance_adding_to_x() throws CustomerNotFoundException, BankAccountNotFoundException, BalanceNotSufficientException {
 
         //GIVEN
-        CurrentAccount currentAccount = currentAccountService.saveCurrentAccount(5000, persistedCustomer.getId(), 20000);
+        CurrentAccount currentAccount = bankAccountService.saveCurrentAccount(5000, persistedCustomer.getId(), 20000);
 
         //WHEN
         accountOperationService.credit(currentAccount.getId(), 60000,"paiement du salaire");
 
         //THEN
-        final BankAccount retrievedCurrentAccount = currentAccountService.getBankAccount(currentAccount.getId());
-        Assertions.assertEquals(65000,retrievedCurrentAccount.getBalance());
+        final BankAccountDto retrievedCurrentAccountDto = bankAccountService.getBankAccount(currentAccount.getId());
+        Assertions.assertEquals(65000, retrievedCurrentAccountDto.getBalance());
     }
 
 
@@ -93,7 +92,7 @@ public class AccountOperationServiceImplIntegrationTest {
     void given_currentAccount_with_insuffisant_balance_when_debit_with_x_amount_then_throw_BalanceNotSufficientException() throws CustomerNotFoundException{
 
         //GIVEN
-        CurrentAccount currentAccount = currentAccountService.saveCurrentAccount(3000, persistedCustomer.getId(), 20000);
+        CurrentAccount currentAccount = bankAccountService.saveCurrentAccount(3000, persistedCustomer.getId(), 20000);
 
         // WHEN
         Exception exception = Assertions.assertThrows(BalanceNotSufficientException.class,() -> {
@@ -108,35 +107,35 @@ public class AccountOperationServiceImplIntegrationTest {
     void given_savingAccount_with_balance_when_debit_with_x_amount_then_the_balance_reducing_to_x() throws CustomerNotFoundException, BankAccountNotFoundException, BalanceNotSufficientException {
 
         //GIVEN
-        SavingAccount savingAccount = savingAccountService.saveSavingAccount(7000, persistedCustomer.getId(), 500);
+        SavingAccount savingAccount = bankAccountService.saveSavingAccount(7000, persistedCustomer.getId(), 500);
 
         //WHEN
         accountOperationService.debit(savingAccount.getId(), 2000,"achat produit intermart");
 
         //THEN
-        final BankAccount retrievedSavingAccount = currentAccountService.getBankAccount(savingAccount.getId());
-        Assertions.assertEquals(5000, retrievedSavingAccount.getBalance());
+        final BankAccountDto retrievedSavingAccountDto = bankAccountService.getBankAccount(savingAccount.getId());
+        Assertions.assertEquals(5000, retrievedSavingAccountDto.getBalance());
     }
 
     @Test
     void given_savingAccount_with_balance_when_credit_with_x_amount_then_the_balance_adding_to_x() throws CustomerNotFoundException, BankAccountNotFoundException, BalanceNotSufficientException {
 
         //GIVEN
-        SavingAccount savingAccount = savingAccountService.saveSavingAccount(7000, persistedCustomer.getId(), 500);
+        SavingAccount savingAccount = bankAccountService.saveSavingAccount(7000, persistedCustomer.getId(), 500);
 
         //WHEN
         accountOperationService.credit(savingAccount.getId(), 40000,"paiement du salaire");
 
         //THEN
-        final BankAccount retrievedSavingAccount = currentAccountService.getBankAccount(savingAccount.getId());
-        Assertions.assertEquals(47000, retrievedSavingAccount.getBalance());
+        final BankAccountDto retrievedSavingAccountDto = bankAccountService.getBankAccount(savingAccount.getId());
+        Assertions.assertEquals(47000, retrievedSavingAccountDto.getBalance());
     }
 
     @Test
     void given_savingAccount_with_insuffisant_balance_when_debit_with_x_amount_then_throw_BalanceNotSufficientException() throws CustomerNotFoundException {
 
         //GIVEN
-        SavingAccount savingAccount = savingAccountService.saveSavingAccount(2000, persistedCustomer.getId(), 500);
+        SavingAccount savingAccount = bankAccountService.saveSavingAccount(2000, persistedCustomer.getId(), 500);
 
         // WHEN
         Exception exception = Assertions.assertThrows(BalanceNotSufficientException.class,() -> {
@@ -151,16 +150,16 @@ public class AccountOperationServiceImplIntegrationTest {
     void given_currentAccount_and_savingAccount_with_balance_when_transfert_from_currentAccout_to_savingAccount_with_x_amount_then_balance_of_currentAcc_reducing_to_x_and_balance_of_savingAcc_adding_to_x() throws CustomerNotFoundException, BankAccountNotFoundException, BalanceNotSufficientException {
 
         //GIVEN
-        CurrentAccount currentAccount = currentAccountService.saveCurrentAccount(90000, persistedCustomer.getId(), 20000);
-        SavingAccount savingAccount = savingAccountService.saveSavingAccount(7000, persistedCustomer.getId(), 500);
+        CurrentAccount currentAccount = bankAccountService.saveCurrentAccount(90000, persistedCustomer.getId(), 20000);
+        SavingAccount savingAccount = bankAccountService.saveSavingAccount(7000, persistedCustomer.getId(), 500);
         //WHEN
         accountOperationService.transfert(currentAccount.getId(), savingAccount.getId(),50000);
 
         //THEN
-        final BankAccount retrievedCurrentAccount = currentAccountService.getBankAccount(currentAccount.getId());
-        final BankAccount retrievedSavingAccount = currentAccountService.getBankAccount(savingAccount.getId());
+        final BankAccountDto retrievedCurrentAccountDto = bankAccountService.getBankAccount(currentAccount.getId());
+        final BankAccountDto retrievedSavingAccountDto = bankAccountService.getBankAccount(savingAccount.getId());
 
-        Assertions.assertEquals(40000,retrievedCurrentAccount.getBalance());
-        Assertions.assertEquals(57000,retrievedSavingAccount.getBalance());
+        Assertions.assertEquals(40000,retrievedCurrentAccountDto.getBalance());
+        Assertions.assertEquals(57000, retrievedSavingAccountDto.getBalance());
     }
 }

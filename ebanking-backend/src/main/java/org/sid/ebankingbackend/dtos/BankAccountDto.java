@@ -10,8 +10,8 @@ import java.util.Date;
 @NoArgsConstructor
 @Getter
 @Setter
-//@Builder
-public abstract class BankAccountDto {
+//public abstract class
+public  class BankAccountDto {
 
     private String id;
 
@@ -23,12 +23,15 @@ public abstract class BankAccountDto {
 
     private CustomerDto customerDto;
 
-    public BankAccountDto(String id,double balance,Date createdAt,AccountStatus status,CustomerDto customerDto){
+    private String type;
+
+    public BankAccountDto(String id,double balance,Date createdAt,AccountStatus status,CustomerDto customerDto,String type){
         this.id = id;
         this.balance = balance;
         this.createdAt = createdAt;
         this.status = status;
         this.customerDto = customerDto;
+        this.type = type;
     }
 
 }

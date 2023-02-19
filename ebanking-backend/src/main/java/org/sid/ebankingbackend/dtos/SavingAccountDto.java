@@ -12,14 +12,13 @@ import java.util.Date;
 @NoArgsConstructor
 @Getter
 @Setter
-//@Builder
 public class SavingAccountDto extends BankAccountDto{
 
     private  double interestRate;
 
     @Builder
-    public SavingAccountDto(String id, double balance, Date createdAt, AccountStatus status, CustomerDto customerDto, double interestRate) {
-        super(id, balance, createdAt, status, customerDto);
+    public SavingAccountDto(String id, double balance, Date createdAt, AccountStatus status, CustomerDto customerDto, double interestRate,String type) {
+        super(id, balance, createdAt, status, customerDto,type);
         this.interestRate = interestRate;
     }
 }

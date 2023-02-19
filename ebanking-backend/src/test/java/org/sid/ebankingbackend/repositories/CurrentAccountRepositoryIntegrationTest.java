@@ -36,7 +36,7 @@ public class CurrentAccountRepositoryIntegrationTest {
 
     private
 
-    @BeforeEach()
+    @BeforeEach
     void createCustomer() {
         persistedCustomer = customerRepository.save(CustomerPopulator.createCustomer("eric", "eric@gmail.com"));
     }

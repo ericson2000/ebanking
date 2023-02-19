@@ -16,8 +16,8 @@ public class CurrentAccountDto extends BankAccountDto {
     private double overDraft;
 
     @Builder
-    public CurrentAccountDto(String id, double balance, Date createdAt, AccountStatus status, CustomerDto customerDto, double overDraft) {
-        super(id, balance, createdAt, status, customerDto);
+    public CurrentAccountDto(String id, double balance, Date createdAt, AccountStatus status, CustomerDto customerDto, double overDraft,String type) {
+        super(id, balance, createdAt, status, customerDto,type);
         this.overDraft = overDraft;
     }
 }

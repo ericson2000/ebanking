@@ -3,10 +3,7 @@ package org.sid.ebankingbackend.repositories;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.sid.ebankingbackend.config.InfrastructureTestConfig;
-import org.sid.ebankingbackend.entities.AccountOperation;
-import org.sid.ebankingbackend.entities.CurrentAccount;
-import org.sid.ebankingbackend.entities.Customer;
-import org.sid.ebankingbackend.entities.SavingAccount;
+import org.sid.ebankingbackend.entities.*;
 import org.sid.ebankingbackend.enums.AccountStatus;
 import org.sid.ebankingbackend.enums.OperationType;
 import org.sid.ebankingbackend.populator.AccountOperationPopulator;
@@ -30,7 +27,7 @@ import java.util.UUID;
 public class AccountOperationRepositoryIntegrationTest {
 
     @Autowired
-    private AccountOperationRepository accountOperationRepository;
+    private AccountOperationRepository<BankAccount> accountOperationRepository;
 
     @Autowired
     private CustomerRepository customerRepository;
