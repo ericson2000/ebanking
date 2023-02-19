@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 
+import org.springframework.http.HttpStatus;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -196,6 +197,27 @@ public class CustomerRestControllerTest {
         WireMock.verify(1, WireMock.deleteRequestedFor(WireMock.urlEqualTo("/api/customers/1")));
         assertEquals(200, httpResponse.getStatusLine().getStatusCode());
         assertEquals("application/json", httpResponse.getFirstHeader("Content-Type").getValue());
+    }
+
+    @Test
+    void given_customer_not_exist_when_request_get_customer_id_executed_then_return_INTERNAL_SERVER_ERROR() throws IOException {
+
+        //GIVEN
+        WireMock.stubFor(WireMock.get(WireMock.urlEqualTo("/api/customers/100"))
+                .willReturn(WireMock.aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withStatus(500)));
+
+        HttpUriRequest request = new HttpGet("http://localhost:7070/api/customers/100");
+
+        //WHEN
+        HttpResponse httpResponse = HttpClientBuilder.create().build().execute(request);
+
+        //THEN
+        WireMock.verify(1, WireMock.getRequestedFor(WireMock.urlEqualTo("/api/customers/100")));
+        assertEquals(500, httpResponse.getStatusLine().getStatusCode());
+        assertEquals("application/json", httpResponse.getFirstHeader("Content-Type").getValue());
+
     }
 
     private String convertResponseToString(HttpResponse response) throws IOException {
