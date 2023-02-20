@@ -1,13 +1,9 @@
 package org.sid.ebankingbackend.rest;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.sid.ebankingbackend.dtos.CustomerDto;
-import org.sid.ebankingbackend.entities.Customer;
 import org.sid.ebankingbackend.execptions.CustomerNotFoundException;
-import org.sid.ebankingbackend.mappers.CustomerMapper;
 import org.sid.ebankingbackend.services.CustomerService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
