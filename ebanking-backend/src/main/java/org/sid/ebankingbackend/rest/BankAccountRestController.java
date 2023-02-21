@@ -37,18 +37,6 @@ public class BankAccountRestController {
         return ResponseEntity.ok(bankAccountService.getListBankAccount());
     }
 
-//    @PostMapping(value = "/accounts", consumes = "application/json", produces = "application/json")
-//    public ResponseEntity<BankAccountDto> saveAccount(@RequestBody BankAccountDto bankAccountDto) throws CustomerNotFoundException {
-//
-//        if (isCurrentAccountDto(bankAccountDto)) {
-//            bankAccountService.saveCurrentAccount(bankAccountDto.getBalance(), bankAccountDto.getCustomerDto().getId(), ((CurrentAccountDto) bankAccountDto).getOverDraft());
-//        } else if (isSavingAccountDto(bankAccountDto)) {
-//            bankAccountService.saveSavingAccount(bankAccountDto.getBalance(), bankAccountDto.getCustomerDto().getId(), ((SavingAccountDto) bankAccountDto).getInterestRate());
-//        }
-//
-//        return null;
-//    }
-
     @PostMapping(value = "/accounts", consumes = "application/json", produces = "application/json")
     public ResponseEntity<CurrentAccountDto> saveAccount(@RequestBody CurrentAccountDto currentAccountDto) throws CustomerNotFoundException {
 

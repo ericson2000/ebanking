@@ -1,11 +1,13 @@
 package org.sid.ebankingbackend.services;
 
 import lombok.extern.slf4j.Slf4j;
+import org.sid.ebankingbackend.dtos.AccountOperationDto;
 import org.sid.ebankingbackend.entities.AccountOperation;
 import org.sid.ebankingbackend.entities.BankAccount;
 import org.sid.ebankingbackend.enums.OperationType;
 import org.sid.ebankingbackend.execptions.BalanceNotSufficientException;
 import org.sid.ebankingbackend.execptions.BankAccountNotFoundException;
+import org.sid.ebankingbackend.mappers.AccountOperationMapper;
 import org.sid.ebankingbackend.repositories.AccountOperationRepository;
 
 import org.sid.ebankingbackend.repositories.BankAccountRepository;
@@ -14,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -67,6 +71,16 @@ public class AccountOperationServiceImpl implements AccountOperationService<Bank
 
         credit(accountIdDestination, amount, "Transfert from " + accountIdSource);
     }
+
+    @Override
+    public List<AccountOperationDto> accountHistory(String accountId) {
+
+        return accountOperationRepository.findByBankAccountId(accountId)
+                .stream()
+                .map(AccountOperationMapper.INSTANCE::accountOperationToAccountOperationDto)
+                .collect(Collectors.toList());
+    }
+
 
     private void setCommonAccountOperations(AccountOperation accountOperation, OperationType operationType, double amount, String description, Date date) {
         accountOperation.setType(operationType);
