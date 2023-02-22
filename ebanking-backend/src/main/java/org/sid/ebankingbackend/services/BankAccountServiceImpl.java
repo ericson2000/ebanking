@@ -6,6 +6,7 @@ import org.sid.ebankingbackend.entities.BankAccount;
 import org.sid.ebankingbackend.entities.CurrentAccount;
 import org.sid.ebankingbackend.entities.Customer;
 import org.sid.ebankingbackend.entities.SavingAccount;
+import org.sid.ebankingbackend.enums.AccountStatus;
 import org.sid.ebankingbackend.execptions.BankAccountNotFoundException;
 import org.sid.ebankingbackend.execptions.CustomerNotFoundException;
 import org.sid.ebankingbackend.mappers.CurrentAccountMapper;
@@ -67,6 +68,7 @@ public abstract class BankAccountServiceImpl implements BankAccountService {
         currentAccount.setBalance(initialBalance);
         currentAccount.setCreatedAt(new Date());
         currentAccount.setCustomer(optionalCustomer.get());
+        currentAccount.setStatus(AccountStatus.CREATED);
         currentAccount.setOverDraft(overdraft);
 
         return  bankAccountRepository.save(currentAccount);
@@ -82,6 +84,7 @@ public abstract class BankAccountServiceImpl implements BankAccountService {
         SavingAccount savingAccount = new SavingAccount();
         savingAccount.setId(UUID.randomUUID().toString());
         savingAccount.setBalance(initialBalance);
+        savingAccount.setStatus(AccountStatus.CREATED);
         savingAccount.setCreatedAt(new Date());
         savingAccount.setCustomer(optionalCustomer.get());
         savingAccount.setInterestRate(interest);

@@ -1,6 +1,7 @@
 package org.sid.ebankingbackend.advice;
 
 import org.sid.ebankingbackend.execptions.ApiError;
+import org.sid.ebankingbackend.execptions.BalanceNotSufficientException;
 import org.sid.ebankingbackend.execptions.BankAccountNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,9 +14,20 @@ import java.util.UUID;
 public class BankAccountExceptionHandler {
 
     @ExceptionHandler(BankAccountNotFoundException.class)
-    public ResponseEntity<ApiError> handleException(BankAccountNotFoundException exception){
+    public ResponseEntity<Object> handleException(BankAccountNotFoundException exception){
 
-        ApiError apiError = new ApiError(UUID.randomUUID().toString(),exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        return  new ResponseEntity<>(apiError,HttpStatus.INTERNAL_SERVER_ERROR);
+        String error = exception.getMessage();
+        return  buildResponseEntity(new ApiError(HttpStatus.INTERNAL_SERVER_ERROR,error,exception));
+    }
+
+    @ExceptionHandler(BalanceNotSufficientException.class)
+    public ResponseEntity<Object> handleException(BalanceNotSufficientException exception){
+
+        String error = exception.getMessage();
+        return  buildResponseEntity(new ApiError(HttpStatus.INTERNAL_SERVER_ERROR,error,exception));
+    }
+
+    private ResponseEntity<Object> buildResponseEntity(ApiError apiError) {
+        return new ResponseEntity<>(apiError, apiError.getStatus());
     }
 }

@@ -1,6 +1,7 @@
 package org.sid.ebankingbackend.services;
 
 import lombok.extern.slf4j.Slf4j;
+import org.sid.ebankingbackend.dtos.AccountHistoryDto;
 import org.sid.ebankingbackend.dtos.AccountOperationDto;
 import org.sid.ebankingbackend.entities.AccountOperation;
 import org.sid.ebankingbackend.entities.BankAccount;
@@ -12,11 +13,14 @@ import org.sid.ebankingbackend.repositories.AccountOperationRepository;
 
 import org.sid.ebankingbackend.repositories.BankAccountRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -79,6 +83,24 @@ public class AccountOperationServiceImpl implements AccountOperationService<Bank
                 .stream()
                 .map(AccountOperationMapper.INSTANCE::accountOperationToAccountOperationDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public AccountHistoryDto getAccountHistory(String accountId, int page, int size) throws BankAccountNotFoundException {
+
+        BankAccount bankAccount = bankAccountRepository.findById(accountId).orElse(null);
+        if (Objects.isNull(bankAccount))
+            throw new BankAccountNotFoundException("Account not found");
+        Page<AccountOperation> accountOperations = accountOperationRepository.findByBankAccountId(accountId, PageRequest.of(page, size));
+
+        return AccountHistoryDto.builder()
+                .accountOperationDtos(accountOperations.getContent().
+                        stream().map(AccountOperationMapper.INSTANCE::accountOperationToAccountOperationDto).collect(Collectors.toList()))
+                .accountId(bankAccount.getId())
+                .balance(bankAccount.getBalance())
+                .currentPage(page)
+                .pageSize(size).totalPage(accountOperations.getTotalPages()).build();
+
     }
 
 

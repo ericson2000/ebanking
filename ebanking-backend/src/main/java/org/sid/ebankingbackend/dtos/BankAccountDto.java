@@ -3,6 +3,8 @@ package org.sid.ebankingbackend.dtos;
 import lombok.*;
 import org.sid.ebankingbackend.enums.AccountStatus;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 
 
@@ -10,17 +12,18 @@ import java.util.Date;
 @NoArgsConstructor
 @Getter
 @Setter
-//public abstract class
 public  class BankAccountDto {
 
     private String id;
 
+    @NotNull
     private double balance;
 
     private Date createdAt;
 
     private AccountStatus status;
 
+    @NotNull
     private CustomerDto customerDto;
 
     private String type;

@@ -7,15 +7,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.UUID;
-
 @RestControllerAdvice
 public class CustomerExceptionHandler {
 
     @ExceptionHandler(CustomerNotFoundException.class)
-    public ResponseEntity<ApiError> handleException(CustomerNotFoundException exception){
+    public ResponseEntity<Object> handleException(CustomerNotFoundException exception){
 
-        ApiError apiError = new ApiError(UUID.randomUUID().toString(),exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        return  new ResponseEntity<>(apiError,HttpStatus.INTERNAL_SERVER_ERROR);
+        String error = exception.getMessage();
+        return  buildResponseEntity(new ApiError(HttpStatus.INTERNAL_SERVER_ERROR,error,exception));
+    }
+
+    private ResponseEntity<Object> buildResponseEntity(ApiError apiError) {
+        return new ResponseEntity<>(apiError, apiError.getStatus());
     }
 }

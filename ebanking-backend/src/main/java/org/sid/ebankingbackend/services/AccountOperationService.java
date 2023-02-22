@@ -1,5 +1,6 @@
 package org.sid.ebankingbackend.services;
 
+import org.sid.ebankingbackend.dtos.AccountHistoryDto;
 import org.sid.ebankingbackend.dtos.AccountOperationDto;
 import org.sid.ebankingbackend.entities.BankAccount;
 import org.sid.ebankingbackend.execptions.BalanceNotSufficientException;
@@ -16,4 +17,6 @@ public interface AccountOperationService<T extends BankAccount> {
     void transfert(String accountIdSource, String accountIdDestination,double amount) throws BankAccountNotFoundException, BalanceNotSufficientException;
 
     List<AccountOperationDto> accountHistory(String accountId);
+
+    AccountHistoryDto getAccountHistory(String accountId, int page, int size) throws BankAccountNotFoundException;
 }

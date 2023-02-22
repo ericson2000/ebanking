@@ -7,6 +7,7 @@ import org.sid.ebankingbackend.services.CustomerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -33,13 +34,13 @@ public class CustomerRestController {
     }
 
     @PostMapping(value = "/customers",consumes = "application/json",produces = "application/json")
-    public ResponseEntity<CustomerDto> saveCustomer(@RequestBody CustomerDto customerDto) {
+    public ResponseEntity<CustomerDto> saveCustomer(@Valid @RequestBody CustomerDto customerDto) {
 
         return ResponseEntity.ok(customerService.saveCustomer(customerDto));
     }
 
     @PutMapping(value = "/customers/{id}",consumes = "application/json",produces = "application/json")
-    public ResponseEntity<CustomerDto> saveCustomer(@PathVariable(name = "id") Long customerId, @RequestBody CustomerDto customerDto) {
+    public ResponseEntity<CustomerDto> saveCustomer(@PathVariable(name = "id") Long customerId,@Valid @RequestBody CustomerDto customerDto) {
 
         customerDto.setId(customerId);
         return ResponseEntity.ok(customerService.updateCustomer(customerDto));

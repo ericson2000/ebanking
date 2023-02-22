@@ -7,6 +7,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.sid.ebankingbackend.config.InfrastructureTestConfig;
+import org.sid.ebankingbackend.dtos.AccountHistoryDto;
+import org.sid.ebankingbackend.dtos.AccountOperationDto;
 import org.sid.ebankingbackend.dtos.BankAccountDto;
 import org.sid.ebankingbackend.entities.BankAccount;
 import org.sid.ebankingbackend.entities.CurrentAccount;
@@ -25,6 +27,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import java.util.List;
 
 @ExtendWith(SpringExtension.class)
 @TestPropertySource(locations = "classpath:application-test.properties")
@@ -139,7 +143,7 @@ public class AccountOperationServiceImplIntegrationTest {
 
         // WHEN
         Exception exception = Assertions.assertThrows(BalanceNotSufficientException.class,() -> {
-            accountOperationService.debit(savingAccount.getId(), 6000,"achat produit intermart");;
+            accountOperationService.debit(savingAccount.getId(), 6000,"achat produit intermart");
         });
 
         //THEN
@@ -161,5 +165,39 @@ public class AccountOperationServiceImplIntegrationTest {
 
         Assertions.assertEquals(40000,retrievedCurrentAccountDto.getBalance());
         Assertions.assertEquals(57000, retrievedSavingAccountDto.getBalance());
+    }
+
+    @Test
+    void given_currentAccount_exist_with_some_debit_credit_and_transfert_operations_when_accountHistory_by_accountId_then_return_list_of_operations() throws CustomerNotFoundException, BankAccountNotFoundException, BalanceNotSufficientException {
+
+        //GIVEN
+        CurrentAccount currentAccount = bankAccountService.saveCurrentAccount(5000, persistedCustomer.getId(), 20000);
+        SavingAccount savingAccount = bankAccountService.saveSavingAccount(7000, persistedCustomer.getId(), 500);
+        accountOperationService.credit(currentAccount.getId(), 60000,"paiement du salaire");
+        accountOperationService.debit(currentAccount.getId(), 6000,"achat produit intermart");
+        accountOperationService.transfert(currentAccount.getId(), savingAccount.getId(),5000);
+
+        //WHEN
+        final List<AccountOperationDto> accountOperationDtos = accountOperationService.accountHistory(currentAccount.getId());
+
+        //THEN;
+        Assertions.assertEquals(3, accountOperationDtos.size());
+    }
+
+    @Test
+    void given_currentAccount_exist_with_some_debit_credit_and_transfert_operations_when_getAccountHistory_by_accountId_page_size_then_return_AccountHistoryDto() throws CustomerNotFoundException, BankAccountNotFoundException, BalanceNotSufficientException {
+
+        //GIVEN
+        CurrentAccount currentAccount = bankAccountService.saveCurrentAccount(5000, persistedCustomer.getId(), 20000);
+        SavingAccount savingAccount = bankAccountService.saveSavingAccount(7000, persistedCustomer.getId(), 500);
+        accountOperationService.credit(currentAccount.getId(), 60000,"paiement du salaire");
+        accountOperationService.debit(currentAccount.getId(), 6000,"achat produit intermart");
+        accountOperationService.transfert(currentAccount.getId(), savingAccount.getId(),5000);
+
+        //WHEN
+        final AccountHistoryDto accountHistoryDto = accountOperationService.getAccountHistory(currentAccount.getId(),1,1);
+
+        //THEN
+        Assertions.assertEquals(54000, accountHistoryDto.getBalance());
     }
 }
