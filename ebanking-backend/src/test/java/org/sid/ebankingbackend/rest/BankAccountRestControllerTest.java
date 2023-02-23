@@ -6,7 +6,9 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,26 +16,25 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.sid.ebankingbackend.config.InfrastructureTestConfig;
-import org.sid.ebankingbackend.dtos.AccountHistoryDto;
-import org.sid.ebankingbackend.dtos.AccountOperationDto;
-import org.sid.ebankingbackend.dtos.CurrentAccountDto;
-import org.sid.ebankingbackend.dtos.SavingAccountDto;
+import org.sid.ebankingbackend.dtos.*;
 import org.sid.ebankingbackend.entities.BankAccount;
 import org.sid.ebankingbackend.entities.CurrentAccount;
 import org.sid.ebankingbackend.entities.Customer;
 import org.sid.ebankingbackend.entities.SavingAccount;
+import org.sid.ebankingbackend.enums.AccountStatus;
 import org.sid.ebankingbackend.execptions.BalanceNotSufficientException;
 import org.sid.ebankingbackend.execptions.BankAccountNotFoundException;
 import org.sid.ebankingbackend.execptions.CustomerNotFoundException;
 import org.sid.ebankingbackend.mappers.CurrentAccountMapper;
+import org.sid.ebankingbackend.mappers.CustomerMapper;
 import org.sid.ebankingbackend.mappers.SavingAccountMapper;
+import org.sid.ebankingbackend.populator.BankAccountPopulator;
 import org.sid.ebankingbackend.populator.CustomerPopulator;
 import org.sid.ebankingbackend.repositories.AccountOperationRepository;
 import org.sid.ebankingbackend.repositories.BankAccountRepository;
 import org.sid.ebankingbackend.repositories.CustomerRepository;
 import org.sid.ebankingbackend.services.AccountOperationService;
 import org.sid.ebankingbackend.services.BankAccountService;
-import org.sid.ebankingbackend.services.CustomerService;
 import org.sid.ebankingbackend.wiremock.WireMockConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -43,9 +44,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -66,7 +65,7 @@ public class BankAccountRestControllerTest {
     private BankAccountRepository<BankAccount> bankAccountRepository;
 
     @Autowired
-    private CustomerRepository customerRepository ;
+    private CustomerRepository customerRepository;
 
     @Autowired
     private AccountOperationRepository<BankAccount> accountOperationRepository;
@@ -82,7 +81,7 @@ public class BankAccountRestControllerTest {
     void setUp() {
         wireMockServer.start();
         WireMock.configureFor("localhost", 7070);
-        customer = CustomerPopulator.createCustomer("eric","eric@gmail.com");
+        customer = CustomerPopulator.createCustomer("eric", "eric@gmail.com");
         persistedCustomer = customerRepository.save(customer);
     }
 
@@ -107,7 +106,7 @@ public class BankAccountRestControllerTest {
                         .withBody(getJsonAsString(currentAccountDto))));
 
 
-        HttpUriRequest request = new HttpGet("http://localhost:7070/api/accounts/"+ currentAccount.getId());
+        HttpUriRequest request = new HttpGet("http://localhost:7070/api/accounts/" + currentAccount.getId());
 
         //WHEN
         HttpResponse httpResponse = HttpClientBuilder.create().build().execute(request);
@@ -127,21 +126,21 @@ public class BankAccountRestControllerTest {
         //GIVEN
         SavingAccount savingAccount = bankAccountService.saveSavingAccount(7000, persistedCustomer.getId(), 500);
         SavingAccountDto savingAccountDto = SavingAccountMapper.INSTANCE.savingAccountToSavingAccountDto(savingAccount);
-        WireMock.stubFor(WireMock.get(WireMock.urlEqualTo("/api/accounts/"+ savingAccount.getId()))
+        WireMock.stubFor(WireMock.get(WireMock.urlEqualTo("/api/accounts/" + savingAccount.getId()))
                 .willReturn(WireMock.aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withStatus(200)
                         .withBody(getJsonAsString(savingAccountDto))));
 
 
-        HttpUriRequest request = new HttpGet("http://localhost:7070/api/accounts/"+ savingAccount.getId());
+        HttpUriRequest request = new HttpGet("http://localhost:7070/api/accounts/" + savingAccount.getId());
 
         //WHEN
         HttpResponse httpResponse = HttpClientBuilder.create().build().execute(request);
 
         //THEN
         String responseString = convertResponseToString(httpResponse);
-        WireMock.verify(1, WireMock.getRequestedFor(WireMock.urlEqualTo("/api/accounts/"+ savingAccount.getId())));
+        WireMock.verify(1, WireMock.getRequestedFor(WireMock.urlEqualTo("/api/accounts/" + savingAccount.getId())));
         assertEquals(200, httpResponse.getStatusLine().getStatusCode());
         assertEquals("application/json", httpResponse.getFirstHeader("Content-Type").getValue());
         assertEquals(responseString, getJsonAsString(savingAccountDto));
@@ -160,7 +159,7 @@ public class BankAccountRestControllerTest {
                 .willReturn(WireMock.aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withStatus(200)
-                        .withBody(getJsonAsString(Arrays.asList(savingAccountDto,currentAccountDto)))));
+                        .withBody(getJsonAsString(Arrays.asList(savingAccountDto, currentAccountDto)))));
 
 
         HttpUriRequest request = new HttpGet("http://localhost:7070/api/accounts/");
@@ -173,7 +172,7 @@ public class BankAccountRestControllerTest {
         WireMock.verify(1, WireMock.getRequestedFor(WireMock.urlEqualTo("/api/accounts/")));
         assertEquals(200, httpResponse.getStatusLine().getStatusCode());
         assertEquals("application/json", httpResponse.getFirstHeader("Content-Type").getValue());
-        assertEquals(responseString, getJsonAsString(Arrays.asList(savingAccountDto,currentAccountDto)));
+        assertEquals(responseString, getJsonAsString(Arrays.asList(savingAccountDto, currentAccountDto)));
 
     }
 
@@ -182,28 +181,28 @@ public class BankAccountRestControllerTest {
 
         //GIVEN
         CurrentAccount currentAccount = bankAccountService.saveCurrentAccount(90000, persistedCustomer.getId(), 20000);
-        accountOperationService.debit(currentAccount.getId(), 600,"achat produit intermart");
-        accountOperationService.credit(currentAccount.getId(), 60000,"paiement du salaire");
+        accountOperationService.debit(currentAccount.getId(), 600, "achat produit intermart");
+        accountOperationService.credit(currentAccount.getId(), 60000, "paiement du salaire");
 
 
         //WHEN
         List<AccountOperationDto> accountOperationDtos = accountOperationService.accountHistory(currentAccount.getId());
 
-        WireMock.stubFor(WireMock.get(WireMock.urlEqualTo("/api/accounts/" + currentAccount.getId()+ "/operations"))
+        WireMock.stubFor(WireMock.get(WireMock.urlEqualTo("/api/accounts/" + currentAccount.getId() + "/operations"))
                 .willReturn(WireMock.aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withStatus(200)
                         .withBody(getJsonAsString(accountOperationDtos))));
 
 
-        HttpUriRequest request = new HttpGet("http://localhost:7070/api/accounts/" + currentAccount.getId()+ "/operations");
+        HttpUriRequest request = new HttpGet("http://localhost:7070/api/accounts/" + currentAccount.getId() + "/operations");
 
         //WHEN
         HttpResponse httpResponse = HttpClientBuilder.create().build().execute(request);
 
         //THEN
         String responseString = convertResponseToString(httpResponse);
-        WireMock.verify(1, WireMock.getRequestedFor(WireMock.urlEqualTo("/api/accounts/"+ currentAccount.getId()+ "/operations")));
+        WireMock.verify(1, WireMock.getRequestedFor(WireMock.urlEqualTo("/api/accounts/" + currentAccount.getId() + "/operations")));
         assertEquals(200, httpResponse.getStatusLine().getStatusCode());
         assertEquals("application/json", httpResponse.getFirstHeader("Content-Type").getValue());
         assertEquals(responseString, getJsonAsString(accountOperationDtos));
@@ -214,104 +213,179 @@ public class BankAccountRestControllerTest {
 
         //GIVEN
         CurrentAccount currentAccount = bankAccountService.saveCurrentAccount(90000, persistedCustomer.getId(), 20000);
-        accountOperationService.debit(currentAccount.getId(), 600,"achat produit intermart");
-        accountOperationService.credit(currentAccount.getId(), 60000,"paiement du salaire");
+        accountOperationService.debit(currentAccount.getId(), 600, "achat produit intermart");
+        accountOperationService.credit(currentAccount.getId(), 60000, "paiement du salaire");
 
 
         //WHEN
-        AccountHistoryDto accountHistoryDto = accountOperationService.getAccountHistory(currentAccount.getId(),1,1);
+        AccountHistoryDto accountHistoryDto = accountOperationService.getAccountHistory(currentAccount.getId(), 1, 1);
 
-        WireMock.stubFor(WireMock.get(WireMock.urlEqualTo("/api/accounts/" + currentAccount.getId()+ "/pageOperations?page=1&size=1"))
+        WireMock.stubFor(WireMock.get(WireMock.urlEqualTo("/api/accounts/" + currentAccount.getId() + "/pageOperations?page=1&size=1"))
                 .willReturn(WireMock.aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withStatus(200)
                         .withBody(getJsonAsString(accountHistoryDto))));
 
 
-        HttpUriRequest request = new HttpGet("http://localhost:7070/api/accounts/" + currentAccount.getId()+ "/pageOperations?page=1&size=1");
+        HttpUriRequest request = new HttpGet("http://localhost:7070/api/accounts/" + currentAccount.getId() + "/pageOperations?page=1&size=1");
 
         //WHEN
         HttpResponse httpResponse = HttpClientBuilder.create().build().execute(request);
 
         //THEN
         String responseString = convertResponseToString(httpResponse);
-        WireMock.verify(1, WireMock.getRequestedFor(WireMock.urlEqualTo("/api/accounts/"+ currentAccount.getId()+ "/pageOperations?page=1&size=1")));
+        WireMock.verify(1, WireMock.getRequestedFor(WireMock.urlEqualTo("/api/accounts/" + currentAccount.getId() + "/pageOperations?page=1&size=1")));
         assertEquals(200, httpResponse.getStatusLine().getStatusCode());
         assertEquals("application/json", httpResponse.getFirstHeader("Content-Type").getValue());
         assertEquals(responseString, getJsonAsString(accountHistoryDto));
     }
 
     @Test
-    void given_currentAccount_exist__when_request_debit_then_debit_balance_account_and_return_status_200() throws IOException, CustomerNotFoundException {
+    void given_currentAccount_exist_when_request_post_debit_then_debit_balance_account_and_return_status_200() throws IOException, CustomerNotFoundException {
 
         //GIVEN
         CurrentAccount currentAccount = bankAccountService.saveCurrentAccount(90000, persistedCustomer.getId(), 20000);
+        CurrentAccountDto currentAccountDto = CurrentAccountMapper.INSTANCE.currentAccountToCurrentAccountDto(currentAccount);
 
         //WHEN
-        WireMock.stubFor(WireMock.get(WireMock.urlEqualTo("/api/accounts/debit/" + currentAccount.getId()+ "/2000/achats"))
+        WireMock.stubFor(WireMock.post(WireMock.urlEqualTo("/api/accounts/debit/" + currentAccount.getId() + "/2000/achats"))
                 .willReturn(WireMock.aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withStatus(200)));
 
 
-        HttpUriRequest request = new HttpGet("http://localhost:7070/api/accounts/debit/" + currentAccount.getId()+ "/2000/achats");
+        HttpPost request = new HttpPost("http://localhost:7070/api/accounts/debit/" + currentAccount.getId() + "/2000/achats");
+//        StringEntity entity = new StringEntity(getJsonAsString(currentAccountDto));
+//        request.addHeader("Content-Type", "application/json");
+//        request.setEntity(entity);
 
         //WHEN
         HttpResponse httpResponse = HttpClientBuilder.create().build().execute(request);
 
         //THEN
-        WireMock.verify(1, WireMock.getRequestedFor(WireMock.urlEqualTo("/api/accounts/debit/"+ currentAccount.getId()+ "/2000/achats")));
+        WireMock.verify(1, WireMock.postRequestedFor(WireMock.urlEqualTo("/api/accounts/debit/" + currentAccount.getId() + "/2000/achats")));
         assertEquals(200, httpResponse.getStatusLine().getStatusCode());
         assertEquals("application/json", httpResponse.getFirstHeader("Content-Type").getValue());
     }
 
     @Test
-    void given_currentAccount_exist_when_request_credit_then_credit_balance_account_and_return_status_200() throws IOException, CustomerNotFoundException {
+    void given_currentAccount_exist_when_request_post_credit_then_credit_balance_account_and_return_status_200() throws IOException, CustomerNotFoundException {
 
         //GIVEN
         CurrentAccount currentAccount = bankAccountService.saveCurrentAccount(90000, persistedCustomer.getId(), 20000);
+        CurrentAccountDto currentAccountDto = CurrentAccountMapper.INSTANCE.currentAccountToCurrentAccountDto(currentAccount);
 
         //WHEN
-        WireMock.stubFor(WireMock.get(WireMock.urlEqualTo("/api/accounts/credit/" + currentAccount.getId()+ "/80000/salaire"))
+        WireMock.stubFor(WireMock.post(WireMock.urlEqualTo("/api/accounts/credit/" + currentAccount.getId() + "/2000/salaire"))
                 .willReturn(WireMock.aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withStatus(200)));
 
 
-        HttpUriRequest request = new HttpGet("http://localhost:7070/api/accounts/credit/" + currentAccount.getId()+ "/80000/salaire");
+        HttpPost request = new HttpPost("http://localhost:7070/api/accounts/credit/" + currentAccount.getId() + "/2000/salaire");
+//        StringEntity entity = new StringEntity(getJsonAsString(currentAccountDto));
+//        request.addHeader("Content-Type", "application/json");
+//        request.setEntity(entity);
 
         //WHEN
         HttpResponse httpResponse = HttpClientBuilder.create().build().execute(request);
 
         //THEN
-        WireMock.verify(1, WireMock.getRequestedFor(WireMock.urlEqualTo("/api/accounts/credit/"+ currentAccount.getId()+ "/80000/salaire")));
+        WireMock.verify(1, WireMock.postRequestedFor(WireMock.urlEqualTo("/api/accounts/credit/" + currentAccount.getId() + "/2000/salaire")));
         assertEquals(200, httpResponse.getStatusLine().getStatusCode());
         assertEquals("application/json", httpResponse.getFirstHeader("Content-Type").getValue());
     }
 
     @Test
-    void given_currentAccount_and_savingAccount__exists_when_request_transfert_then_return_status_200() throws IOException, CustomerNotFoundException {
+    void given_currentAccount_and_savingAccount_exists_when_request_post_transfert_then_return_status_200() throws IOException, CustomerNotFoundException {
 
         //GIVEN
         CurrentAccount currentAccount = bankAccountService.saveCurrentAccount(90000, persistedCustomer.getId(), 20000);
         SavingAccount savingAccount = bankAccountService.saveSavingAccount(7000, persistedCustomer.getId(), 500);
+        CurrentAccountDto currentAccountDto = CurrentAccountMapper.INSTANCE.currentAccountToCurrentAccountDto(currentAccount);
+        SavingAccountDto savingAccountDto = SavingAccountMapper.INSTANCE.savingAccountToSavingAccountDto(savingAccount);
 
-        //WHEN
-        WireMock.stubFor(WireMock.get(WireMock.urlEqualTo("/api/accounts/transfert/" + currentAccount.getId()+ "/"+ savingAccount.getId()+"/2000"))
+        WireMock.stubFor(WireMock.post(WireMock.urlEqualTo("/api/accounts/transfert/" + currentAccountDto.getId() + "/" + savingAccountDto.getId() + "/2000"))
                 .willReturn(WireMock.aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withStatus(200)));
 
 
-        HttpUriRequest request = new HttpGet("http://localhost:7070/api/accounts/transfert/" + currentAccount.getId()+ "/"+ savingAccount.getId()+"/2000");
+        HttpPost request = new HttpPost("http://localhost:7070/api/accounts/transfert/" + currentAccountDto.getId() + "/" + savingAccountDto.getId() + "/2000");
+//        StringEntity entity = new StringEntity(getJsonAsString(currentAccountDto));
+//        request.addHeader("Content-Type", "application/json");
+//        request.setEntity(entity);
 
         //WHEN
         HttpResponse httpResponse = HttpClientBuilder.create().build().execute(request);
 
         //THEN
-        WireMock.verify(1, WireMock.getRequestedFor(WireMock.urlEqualTo("/api/accounts/transfert/"+  currentAccount.getId()+ "/"+ savingAccount.getId()+"/2000")));
+        WireMock.verify(1, WireMock.postRequestedFor(WireMock.urlEqualTo("/api/accounts/transfert/" + currentAccountDto.getId() + "/" + savingAccountDto.getId() + "/2000")));
         assertEquals(200, httpResponse.getStatusLine().getStatusCode());
         assertEquals("application/json", httpResponse.getFirstHeader("Content-Type").getValue());
+
+    }
+
+    @Test
+    void given_currentAccountDto_not_exists_when_request_saveCurrentAccount_then_return_currentAccountDto_with_status_200() throws IOException, CustomerNotFoundException {
+
+        //GIVEN
+        CurrentAccountDto currentAccountDto = BankAccountPopulator.createCurrentAccountDto(UUID.randomUUID().toString(), Math.random() * 900000, new Date(), AccountStatus.CREATED, CustomerMapper.INSTANCE.customerToCustomerDto(persistedCustomer), 9000);
+        BankAccountDto currentAccountDtoSaved = CurrentAccountMapper.INSTANCE.currentAccountToCurrentAccountDto(bankAccountService.saveCurrentAccount(currentAccountDto.getBalance(), currentAccountDto.getCustomerDto().getId(), currentAccountDto.getOverDraft()));
+
+        WireMock.stubFor(WireMock.post(WireMock.urlEqualTo("/api/accounts/ca/"))
+                .withRequestBody(WireMock.containing(getJsonAsString(currentAccountDto)))
+                .willReturn(WireMock.aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withStatus(200)
+                        .withBody(getJsonAsString(currentAccountDtoSaved))));
+
+
+        HttpPost request = new HttpPost("http://localhost:7070/api/accounts/ca/");
+        StringEntity entity = new StringEntity(getJsonAsString(currentAccountDto));
+        request.addHeader("Content-Type", "application/json");
+        request.setEntity(entity);
+
+        //WHEN
+        HttpResponse httpResponse = HttpClientBuilder.create().build().execute(request);
+
+        //THEN
+        String responseString = convertResponseToString(httpResponse);
+        WireMock.verify(1, WireMock.postRequestedFor(WireMock.urlEqualTo("/api/accounts/ca/")));
+        assertEquals(200, httpResponse.getStatusLine().getStatusCode());
+        assertEquals("application/json", httpResponse.getFirstHeader("Content-Type").getValue());
+        assertEquals(responseString, getJsonAsString(currentAccountDtoSaved));
+    }
+
+    @Test
+    void given_savingAccountDto_not_exists_when_request_saveSavingAccount_then_return_savingAccountDto_with_status_200() throws IOException, CustomerNotFoundException {
+
+        //GIVEN
+        SavingAccountDto savingAccountDto = BankAccountPopulator.createSavingAccountDto(UUID.randomUUID().toString(), Math.random() * 900000, new Date(), AccountStatus.CREATED, CustomerMapper.INSTANCE.customerToCustomerDto(persistedCustomer), 9000);
+        BankAccountDto savingAccountDtoSaved = SavingAccountMapper.INSTANCE.savingAccountToSavingAccountDto(bankAccountService.saveSavingAccount(savingAccountDto.getBalance(), savingAccountDto.getCustomerDto().getId(), savingAccountDto.getInterestRate()));
+
+        WireMock.stubFor(WireMock.post(WireMock.urlEqualTo("/api/accounts/sa/"))
+                .withRequestBody(WireMock.containing(getJsonAsString(savingAccountDto)))
+                .willReturn(WireMock.aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withStatus(200)
+                        .withBody(getJsonAsString(savingAccountDtoSaved))));
+
+
+        HttpPost request = new HttpPost("http://localhost:7070/api/accounts/sa/");
+        StringEntity entity = new StringEntity(getJsonAsString(savingAccountDto));
+        request.addHeader("Content-Type", "application/json");
+        request.setEntity(entity);
+
+        //WHEN
+        HttpResponse httpResponse = HttpClientBuilder.create().build().execute(request);
+
+        //THEN
+        String responseString = convertResponseToString(httpResponse);
+        WireMock.verify(1, WireMock.postRequestedFor(WireMock.urlEqualTo("/api/accounts/sa/")));
+        assertEquals(200, httpResponse.getStatusLine().getStatusCode());
+        assertEquals("application/json", httpResponse.getFirstHeader("Content-Type").getValue());
+        assertEquals(responseString, getJsonAsString(savingAccountDtoSaved));
     }
 
     @Test
